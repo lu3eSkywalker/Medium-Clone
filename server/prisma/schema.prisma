@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int         @id @default(autoincrement())
+  name         String
+  email        String      @unique
+  password     String     
+  blog         Blog[]
+  like         Like[]
+  comment      Comment[]
+  savedblog    Savedblog[]
+  followedBy   Follows[] @relation("followedBy")
+  following    Follows[] @relation("following")
+}
+
+model Follows {
+  followedBy      User @relation("followedBy", fields: [followedById], references: [id])
+  followedById    Int
+  following       User @relation("following", fields: [followingId], references: [id])
+  followingId     Int
+
+  @@id([followingId, followedById])
+}
+
+enum Category {
+  software_engineering
+  blockchain
+  metaverse
+  machine_learning
+  react
+  web_development
+  android_development
+  deep_learning
+}
+
+model Blog {
+  id                    Int       @id @default(autoincrement())
+  title                 String
+  body                  String
+  category              Category
+  userId                Int
+  user                  User?     @relation(fields: [userId], references: [id])
+  cloudinaryUrl1        String
+  // cloudinaryUrl2        String
+  like                  Like[]
+  comment               Comment[]
+  savedby             Savedblog[]
+}
+
+model Like {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  user          User?     @relation(fields: [userId], references: [id])
+  blogId        Int
+  blog          Blog      @relation(fields: [blogId], references: [id])
+
+  @@unique([userId, blogId])
+}
+
+model Comment {
+  id            Int       @id @default(autoincrement())
+  body          String
+  userId        Int
+  user          User?     @relation(fields: [userId], references: [id])
+  blogId        Int
+  blog          Blog?     @relation(fields: [blogId], references: [id])
+}
+
+model Savedblog {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  user          User?     @relation(fields: [userId], references: [id])
+  blogId        Int
+  blog          Blog?     @relation(fields: [blogId], references: [id])
+
+  @@unique([userId, blogId])
+}
