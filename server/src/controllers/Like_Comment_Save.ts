@@ -5,25 +5,71 @@ import jwt, { Secret } from 'jsonwebtoken';
 
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
+import authenticate from "../middlewares/Authorization";
 
 
-
-const authenticate = (req: Request, res: Response, next: NextFunction) => {
-    const token = req.header('Authorization');
-
-    if(!token) {
-        return res.status(401).json({ message: 'Unauthorized: Missing token' });
-    }
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as Secret);
-        req.user = decoded;
-        next();
-    } catch(error) {
-        return res.status(401).json({ message: 'Unauthorized: Invalid token' });
-    }
-}
-
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ * 
+ * /api/v1/like:
+ *   post:
+ *     summary: Like a Post
+ *     tags: [Like]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - blogId
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: ID of the user liking the blog
+ *               blogId:
+ *                 type: integer
+ *                 description: ID of the blog post to like 
+ *     responses:
+ *       200:
+ *         description: Entry Created Successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: integer
+ *                     blogId:
+ *                       type: integer
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Error Liking the Post
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
 
 
 
@@ -61,6 +107,75 @@ export const LikeBlog = async(req: Request, res: Response): Promise<void> => {
 const commentSchema = z.object({
     body: z.string().min(5).max(100000),
 })
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ * 
+ * /api/v1/comment:
+ *   post:
+ *     summary: Add comment to a post
+ *     tags: [Comment]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - blogId
+ *               - body
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: ID of the user commenting on the blog
+ *               blogId:
+ *                 type: integer
+ *                 description: ID of the blog post to comment on
+ *               body: 
+ *                 type: string
+ *                 description: Content of the comment
+ *     responses:
+ *       200:
+ *         description: Entry Created Successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: integer
+ *                     blogId:
+ *                       type: integer
+ *                     body: 
+ *                       type: string 
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Error commenting on the post
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
 
 
 export const CommentBlog = async(req: Request, res: Response): Promise<void> => {
@@ -106,6 +221,158 @@ export const CommentBlog = async(req: Request, res: Response): Promise<void> => 
     }
 }
 
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ * 
+ * /api/v1/saveblog:
+ *   post:
+ *     summary: Save a blog
+ *     tags: [Savedblog]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - blogId
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: ID of the user saving the blog post
+ *               blogId:
+ *                 type: integer
+ *                 description: ID of the blog post to be saved
+ *     responses:
+ *       200:
+ *         description: Successfully saved the post
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: integer
+ *                     blogId:
+ *                       type: integer
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Error saving the blog
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
+
+
+export const saveBlog = async(req: Request, res: Response): Promise<void> => {
+    try {
+
+        authenticate(req, res, async() => {
+            const {blogId, userId} = req.body
+
+            const savedBlog = await prisma.savedblog.create({
+                data: {
+                    userId: userId,
+                    blogId: blogId
+                }
+            });
+    
+            res.status(200).json({
+                success: true,
+                data: savedBlog,
+                message: 'Successfully saved the post'
+            })
+        })
+    }
+    catch(error) {
+        console.log("Error: ", error);
+        res.status(500).json({
+            success: false,
+            message: 'Error saving the blog'
+        })
+    }
+}
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ * 
+ * /api/v1/deletelike:
+ *   delete:
+ *     summary: Remove the like
+ *     tags: [Like]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - likeId
+ *             properties:
+ *               likeId:
+ *                 type: integer
+ *                 description: ID of the post like to be removed
+ *     responses:
+ *       200:
+ *         description: Successfully deleted the like
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Error deleting the like
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
+
+
+
 export const deleteLike = async(req: Request, res: Response): Promise<void> => {
     try {
 
@@ -134,6 +401,64 @@ export const deleteLike = async(req: Request, res: Response): Promise<void> => {
     }
 }
 
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ * 
+ * /api/v1/deletecomment:
+ *   delete:
+ *     summary: Remove the comment
+ *     tags: [Comment]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - commentId
+ *             properties:
+ *               commentId:
+ *                 type: integer
+ *                 description: ID of the comment to be removed
+ *     responses:
+ *       200:
+ *         description: Successfully deleted the comment
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Error deleting the comment
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
+
+
 export const deleteComment = async(req: Request, res: Response): Promise<void> => {
     try {
 
@@ -161,39 +486,62 @@ export const deleteComment = async(req: Request, res: Response): Promise<void> =
         })
     }
 }
-
-
-export const saveBlog = async(req: Request, res: Response): Promise<void> => {
-    try {
-
-        authenticate(req, res, async() => {
-            const {blogId, userId} = req.body
-
-            const savedBlog = await prisma.savedblog.create({
-                data: {
-                    userId: userId,
-                    blogId: blogId
-                }
-            });
-    
-            res.status(200).json({
-                success: true,
-                data: savedBlog,
-                message: 'Successfully saved the post'
-            })
-        })
-
-
-
-    }
-    catch(error) {
-        console.log("Error: ", error);
-        res.status(500).json({
-            success: false,
-            message: 'Error saving the blog'
-        })
-    }
-}
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ * 
+ * /api/v1/deletesave:
+ *   delete:
+ *     summary: Remove the saved post
+ *     tags: [Savedblog]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - savedblogId
+ *             properties:
+ *               savedblogId:
+ *                 type: integer
+ *                 description: ID of the saved blog to be removed
+ *     responses:
+ *       200:
+ *         description: Successfully deleted the saved blog
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Error deleting the saved blog
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
 
 export const deletesavedBlog = async(req: Request, res: Response): Promise<void> => {
     try{

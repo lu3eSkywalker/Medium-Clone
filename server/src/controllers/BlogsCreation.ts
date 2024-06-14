@@ -7,6 +7,7 @@ import jwt, { Secret } from 'jsonwebtoken';
 
 import { cloudinary } from "../utils/cloudinary";
 import { Category, PrismaClient } from '@prisma/client';
+import authenticate from "../middlewares/Authorization";
 const prisma = new PrismaClient();
 
 
@@ -23,22 +24,108 @@ declare global {
     }
 }
 
-const authenticate = (req: Request, res: Response, next: NextFunction) => {
-    const token = req.header('Authorization');
 
-    if(!token) {
-        return res.status(401).json({message: 'Unauthorized: Missing token' });
-    }
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as Secret);
-        req.user = decoded;
-        next();
-    }
-    catch(error) {
-        return res.status(401).json({ message: 'Unauthorized: Invalid token'})
-    }
-}
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ * 
+ * /api/v1/uploadblog:
+ *   post:
+ *     summary: Create a new blog entry
+ *     tags: [Blog]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: ID of the user creating the blog entry
+ *               category:
+ *                 type: string
+ *                 description: Category of the blog
+ *               title:
+ *                 type: string
+ *                 description: Title of the blog entry
+ *               body:
+ *                 type: string
+ *                 description: Content/body of the blog entry
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image file to be uploaded with the blog entry
+ *             required:
+ *               - userId
+ *               - category
+ *               - title
+ *               - body
+ *               - image
+ *     responses:
+ *       200:
+ *         description: Blog entry created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: integer
+ *                     title:
+ *                       type: string
+ *                     body:
+ *                       type: string
+ *                     cloudinaryUrl:
+ *                       type: string
+ *                     category:
+ *                       type: string
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       411:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: object
+ *       500:
+ *         description: Internal Server Error - Entry creation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
 
 
 export const CreateBlog = async(req: Request, res: Response): Promise<void> => {

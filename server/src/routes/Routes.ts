@@ -8,6 +8,7 @@ import { fetchFollowers, toaddFollower, unfollow } from '../controllers/Follower
 
 const router: express.Router = express.Router();
 
+
 router.post('/signup', signupUser);
 router.post('/login', login);
 router.post('/uploadblog', upload.single('image'), CreateBlog);
@@ -21,7 +22,7 @@ router.get('/allblogs', FetchAllBlogs);
 router.get('/blogpagination', FetchAllBlogsPagination);
 router.get('/byname/:searchQuery', getBlogByName);
 router.get('/bycategory/:categoryQuery', getBlogByCategory);
-router.get('/fetchfollower', fetchFollowers);
+router.get('/fetchfollower/:userId', fetchFollowers);
 
 
 router.delete('/deletecomment', deleteComment);
