@@ -1,12 +1,10 @@
 import { NextFunction, Request, Response } from "express"
 import {z} from 'zod';
 import jwt, { Secret } from 'jsonwebtoken';
-
-
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 import authenticate from "../middlewares/Authorization";
-
+import { prismaClient } from "../db";
 
 /**
  * @swagger
@@ -79,7 +77,7 @@ export const LikeBlog = async(req: Request, res: Response): Promise<void> => {
         authenticate(req, res, async() => {
             const {userId, blogId} = req.body as{userId: number, blogId: number};
 
-            const newLike = await prisma.like.create({
+            const newLike = await prismaClient.like.create({
                 data: {
                     userId: userId,
                     blogId: blogId
@@ -195,7 +193,7 @@ export const CommentBlog = async(req: Request, res: Response): Promise<void> => 
     
             const body = parsedInput.data.body;
     
-            const newComment = await prisma.comment.create({
+            const newComment = await prismaClient.comment.create({
                 data: {
                     userId: userId,
                     blogId: blogId,
@@ -291,7 +289,7 @@ export const saveBlog = async(req: Request, res: Response): Promise<void> => {
         authenticate(req, res, async() => {
             const {blogId, userId} = req.body
 
-            const savedBlog = await prisma.savedblog.create({
+            const savedBlog = await prismaClient.savedblog.create({
                 data: {
                     userId: userId,
                     blogId: blogId
@@ -379,7 +377,7 @@ export const deleteLike = async(req: Request, res: Response): Promise<void> => {
         authenticate(req, res, async() => {
             const{likeId} = req.body;
 
-            const deletedLike = await prisma.like.delete({
+            const deletedLike = await prismaClient.like.delete({
                 where: {
                     id: likeId
                 }
@@ -465,7 +463,7 @@ export const deleteComment = async(req: Request, res: Response): Promise<void> =
         authenticate(req, res, async() => {
             const {commentId} = req.body
 
-            const deleteComment = await prisma.comment.delete({
+            const deleteComment = await prismaClient.comment.delete({
                 where: {
                     id: commentId
                 },
@@ -549,7 +547,7 @@ export const deletesavedBlog = async(req: Request, res: Response): Promise<void>
         authenticate(req, res, async() => {
             const {savedblogId} = req.body;
 
-            const deletesave = await prisma.savedblog.delete({
+            const deletesave = await prismaClient.savedblog.delete({
                 where: {
                     id: savedblogId
                 }

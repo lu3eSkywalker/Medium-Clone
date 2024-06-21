@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 
 import { Category, PrismaClient } from '@prisma/client';
+import { prismaClient } from "../db";
 const prisma = new PrismaClient();
+
 
 
 
@@ -55,7 +57,7 @@ const prisma = new PrismaClient();
 
 export const FetchAllBlogs = async(req: Request, res: Response): Promise<void> => {
     try {
-        const allBlogs = await prisma.blog.findMany({});
+        const allBlogs = await prismaClient.blog.findMany({});
 
         res.status(200).json({
             success: true,
@@ -139,7 +141,7 @@ export const FetchAllBlogsPagination = async(req: Request, res: Response): Promi
 
         const offset = (page - 1) * limit;
 
-        const allBlogs = await prisma.blog.findMany({
+        const allBlogs = await prismaClient.blog.findMany({
             skip: offset,
             take: limit
         });
@@ -265,7 +267,7 @@ export const getBlogByName = async(req: Request, res: Response): Promise<void> =
 
         const offset = (page - 1) * limit;
 
-        const blogsByNameTitle = await prisma.blog.findMany({
+        const blogsByNameTitle = await prismaClient.blog.findMany({
             where: {
                 title: {
                     contains: searchQuery,
@@ -276,7 +278,7 @@ export const getBlogByName = async(req: Request, res: Response): Promise<void> =
             take: limit
         });
 
-        const blogsByNameBody = await prisma.blog.findMany({
+        const blogsByNameBody = await prismaClient.blog.findMany({
             where: {
                 body: {
                     contains: searchQuery,
@@ -397,7 +399,7 @@ export const getBlogByCategory = async(req: Request, res: Response): Promise<voi
 
         const offset = (page - 1) * limit;
 
-        const blogs = await prisma.blog.findMany({
+        const blogs = await prismaClient.blog.findMany({
             where: {
                 category: categoryQuery
             },

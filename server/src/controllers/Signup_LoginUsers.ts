@@ -4,8 +4,8 @@ import bcrypt from 'bcrypt';
 import dotenv, { parse } from 'dotenv';
 dotenv.config();
 import jwt, { Secret } from 'jsonwebtoken';
-
 import { PrismaClient } from '@prisma/client';
+import { prismaClient } from "../db";
 const prisma = new PrismaClient();
 
 const secretjwt: string = process.env.JWT_SECRET || ''
@@ -100,7 +100,7 @@ export const signupUser = async(req: Request, res: Response): Promise<void> => {
         let hashedPassword: string;
             hashedPassword = await bcrypt.hash(password, 10);
 
-            const response = await prisma.user.create({
+            const response = await prismaClient.user.create({
                 data: {
                     name,
                     email,
@@ -232,7 +232,7 @@ export const login = async(req: Request<{ email: string, password: string}>, res
         const email = parsedInput.data.email;
         const password = parsedInput.data.password;
 
-        const user = await prisma.user.findUnique({
+        const user = await prismaClient.user.findUnique({
             where: {
                 email: email,
             }

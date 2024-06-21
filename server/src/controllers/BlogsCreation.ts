@@ -9,11 +9,13 @@ import { cloudinary } from "../utils/cloudinary";
 import { Category, PrismaClient } from '@prisma/client';
 import authenticate from "../middlewares/Authorization";
 const prisma = new PrismaClient();
+import { prismaClient } from "../db";
+
 
 
 const blogSchema = z.object({
     title: z.string().min(5).max(500),
-    body: z.string().min(100).max(1000000000),
+    body: z.string().min(10).max(1000000000),
 })
 
 declare global {
@@ -153,14 +155,15 @@ export const CreateBlog = async(req: Request, res: Response): Promise<void> => {
     
             const title = parsedInput.data.title;
             const body = parsedInput.data.body;
+            const url = result ? result.secure_url : null;
     
             
-            const newBlog = await prisma.blog.create({
+            const newBlog = await prismaClient.blog.create({
                 data: {
                     userId: userId,
                     title: title,
                     body: body,
-                    cloudinaryUrl1: result.secure_url,
+                    cloudinaryUrl1: url,
                     category: category
                 }
             })

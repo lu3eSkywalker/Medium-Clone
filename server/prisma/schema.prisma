@@ -53,7 +53,7 @@ model Blog {
   category              Category
   userId                Int
   user                  User?     @relation(fields: [userId], references: [id])
-  cloudinaryUrl1        String
+  cloudinaryUrl1        String?
   // cloudinaryUrl2        String
   like                  Like[]
   comment               Comment[]
